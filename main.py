@@ -11,11 +11,16 @@ sad_words=["sad","depressed","angry","miserable","depressing","unhappy","pissed"
 
 starter_encouragements=["Cheer Up!","Hang in there","You are great","Look around the amazing world"]
 
+
+if "responding" not in db.keys():
+  db["responding"]=True
+
 def update_encouragements(encouraging_message):
   if "encouragements" in db.keys():
     encouragements=db["encouragements"]
-    encouragements.append(encouraging_message)
-    db["encouragements"]=encouragements
+    if encouraging_message not in encouragements:
+      encouragements.append(encouraging_message)
+      db["encouragements"]=encouragements
   else:
     db["encouragements"]=[encouraging_message]
 
@@ -40,14 +45,16 @@ async def on_message(message):
   if message.author==client.user:
     return
   msg=message.content
+  
   if msg.startswith('$inspire'):
     await message.channel.send(get_quote())
-  options=starter_encouragements
-  if "encouragements" in db.keys():
-    options+=db["encouragements"]
-     
-  if any(word in msg for word in sad_words):
-    await message.channel.send(random.choice(options))
+  if db["responding"]:
+    options=starter_encouragements
+    if "encouragements" in db.keys():
+      options+=db["encouragements"]
+      
+    if any(word in msg for word in sad_words):
+      await message.channel.send(random.choice(options))
   
   if msg.startswith("$new"):
     encouraging_message=msg.split("$new ",1)[1]
@@ -60,6 +67,20 @@ async def on_message(message):
       index=int(msg.split("$del ",1)[1])
       delete_encouragements(index)
       encouragements=db["encouragements"]
-    await message.channel.send("Updated encouragements are"+ encouragements)
+    await message.channel.send(encouragements)
+  
+  if msg.startswith("$list"):
+    encouragements=[]
+    if "encouragements" in db.keys():
+      encouragements=db["encouragements"]
+    await message.channel.send(encouragements)
+  
+  if msg.startswith("$responding"):
+    value=msg.split("$responding ",1)[1]
+    if value.lower()=="true":
+      db["responding"]=True
+    else:
+      db["responding"]=False
+    await message.channel.send("Responding is "+value)
 
 client.run(os.getenv('TOKEN')) 
