@@ -5,6 +5,8 @@ import json
 import random
 from replit import db
 from keep_alive import keep_alive
+import math
+import random
 
 
 client=discord.Client()
@@ -37,6 +39,13 @@ def get_quote():
   jsonData=json.loads(response.text)
   quote=(jsonData[0]['q']+" - "+ jsonData[0]['a'])
   return quote
+
+def get_gif(keywords):
+  url="https://g.tenor.com/v1/search?q={}&key=${}".format(keywords,os.getenv('TENORKEY'))
+  response=requests.get(url)
+  jsonData=json.loads(response.text)
+  index=math.floor(random.random()*len(jsonData['results']))
+  return jsonData['results'][index]['url']
 
 @client.event
 async def on_ready():
@@ -84,6 +93,13 @@ async def on_message(message):
     else:
       db["responding"]=False
     await message.channel.send("Responding is "+value)
+   
+  if msg.startswith("$gif"):
+    keywords=msg.split("$gif ",1)[1]
+    await message.channel.send(get_gif(keywords))
+
+
+
 
 keep_alive()
 client.run(os.getenv('TOKEN')) 
